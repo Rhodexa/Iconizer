@@ -145,6 +145,7 @@ function updateControls() {
   ui.picsCount.textContent = n ? `${n} loaded` : 'none loaded';
   ui.clearBtn.disabled = !n || state.busy;
   ui.downloadBtn.disabled = !n || !state.icon || state.busy;
+  ui.downloadBtn.textContent = n === 1 ? 'Download image' : 'Download all (.zip)';
   state.pics.forEach((p) => { p.dlBtn.disabled = !state.icon || state.busy; });
 }
 
@@ -269,6 +270,7 @@ async function downloadOne(file) {
 
 async function downloadAll() {
   if (state.busy || !state.icon || !state.pics.length) return;
+  if (state.pics.length === 1) return downloadOne(state.pics[0].file);
   state.busy = true;
   updateControls();
   const s = settings();
