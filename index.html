@@ -70,7 +70,47 @@
       </section>
 
       <section>
-        <h2>4 · Export</h2>
+        <h2>4 · Tags</h2>
+        <div class="field">
+          <label class="toggle"><input type="checkbox" id="priceOn"> Price</label>
+          <input type="text" id="price" placeholder="$25" disabled>
+        </div>
+        <div class="field">
+          <label class="toggle"><input type="checkbox" id="sizeTagOn"> Size</label>
+          <input type="text" id="sizeTag" placeholder="M" list="sizeList" disabled>
+          <datalist id="sizeList">
+            <option value="XS"><option value="S"><option value="M"><option value="L">
+            <option value="XL"><option value="XXL"><option value="One size">
+          </datalist>
+        </div>
+        <div id="tagOptions">
+          <div class="field">
+            <label for="tagCorner">Corner</label>
+            <select id="tagCorner">
+              <option value="opposite" selected>Opposite the icon</option>
+              <option value="br">Bottom right</option>
+              <option value="bl">Bottom left</option>
+              <option value="tr">Top right</option>
+              <option value="tl">Top left</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="tagStyle">Style</label>
+            <select id="tagStyle">
+              <option value="dark" selected>Dark</option>
+              <option value="light">Light</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="tagSize">Tag size <output id="tagSizeOut"></output></label>
+            <input type="range" id="tagSize" min="3" max="20" step="0.5" value="8">
+            <small>Tag height as % of the picture's shorter side</small>
+          </div>
+        </div>
+      </section>
+
+      <section>
+        <h2>5 · Export</h2>
         <div class="field">
           <label for="format">Format</label>
           <select id="format">

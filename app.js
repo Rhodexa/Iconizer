@@ -10,6 +10,8 @@ const ui = {
   picsInput: $('picsInput'), picsDrop: $('picsDrop'), picsCount: $('picsCount'), clearBtn: $('clearBtn'),
   position: $('position'), autoCornersField: $('autoCornersField'),
   size: $('size'), margin: $('margin'), opacity: $('opacity'),
+  priceOn: $('priceOn'), price: $('price'), sizeTagOn: $('sizeTagOn'), sizeTag: $('sizeTag'),
+  tagOptions: $('tagOptions'), tagCorner: $('tagCorner'), tagStyle: $('tagStyle'), tagSize: $('tagSize'),
   format: $('format'), quality: $('quality'),
   downloadBtn: $('downloadBtn'), progress: $('progress'), status: $('status'),
   gallery: $('gallery'), empty: $('empty'),
@@ -31,6 +33,13 @@ function settings() {
     size: +ui.size.value / 100,
     margin: +ui.margin.value / 100,
     opacity: +ui.opacity.value / 100,
+    tags: [
+      ui.priceOn.checked && ui.price.value.trim(),
+      ui.sizeTagOn.checked && ui.sizeTag.value.trim(),
+    ].filter(Boolean),
+    tagCorner: ui.tagCorner.value,
+    tagStyle: ui.tagStyle.value,
+    tagSize: +ui.tagSize.value / 100,
     format: ui.format.value,
     quality: +ui.quality.value / 100,
   };
@@ -41,7 +50,11 @@ function syncOutputs() {
   $('marginOut').textContent = ui.margin.value + '%';
   $('opacityOut').textContent = ui.opacity.value + '%';
   $('qualityOut').textContent = ui.quality.value + '%';
+  $('tagSizeOut').textContent = ui.tagSize.value + '%';
   ui.autoCornersField.hidden = ui.position.value !== 'auto';
+  ui.price.disabled = !ui.priceOn.checked;
+  ui.sizeTag.disabled = !ui.sizeTagOn.checked;
+  ui.tagOptions.hidden = !ui.priceOn.checked && !ui.sizeTagOn.checked;
   const lossless = ui.format.value === 'image/png';
   ui.quality.disabled = lossless;
 }
@@ -95,10 +108,19 @@ function scoreCorner(base, corner, s) {
   return (weight ? diff / weight : 0) - 0.35 * std;
 }
 
+// Mirrors the corner horizontally, so tags sit on the same edge as the icon.
+const opposite = (c) => c[0] + (c[1] === 'l' ? 'r' : 'l');
+
 function pickCorner(pic, s) {
   if (s.position !== 'auto') return s.position;
-  let best = s.allowed[0], bestScore = -Infinity;
-  for (const c of s.allowed) {
+  // Keep auto placement out of a corner reserved for tags.
+  let allowed = s.allowed;
+  if (s.tags.length && s.tagCorner !== 'opposite') {
+    const free = allowed.filter((c) => c !== s.tagCorner);
+    if (free.length) allowed = free;
+  }
+  let best = allowed[0], bestScore = -Infinity;
+  for (const c of allowed) {
     const score = scoreCorner(pic.base, c, s);
     if (score > bestScore) { bestScore = score; best = c; }
   }
@@ -116,14 +138,51 @@ function drawWatermark(ctx, W, H, corner, s) {
   ctx.restore();
 }
 
+// Price / size tags: a row of rounded pills in one corner. Height and margin
+// are relative to the shorter side, like the icon.
+function drawTags(ctx, W, H, iconCorner, s) {
+  if (!s.tags.length) return;
+  const corner = s.tagCorner === 'opposite' ? opposite(iconCorner || 'bl') : s.tagCorner;
+  const short = Math.min(W, H);
+  const h = Math.max(4, Math.round(short * s.tagSize));
+  const m = Math.round(short * s.margin);
+  const gap = Math.round(h * 0.25), pad = h * 0.4;
+  ctx.save();
+  ctx.font = `600 ${Math.round(h * 0.56)}px system-ui, -apple-system, "Segoe UI", Roboto, sans-serif`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  const widths = s.tags.map((t) => Math.max(h, Math.ceil(ctx.measureText(t).width + pad * 2)));
+  const total = widths.reduce((a, b) => a + b, 0) + gap * (widths.length - 1);
+  let x = corner[1] === 'l' ? m : W - m - total;
+  const y = corner[0] === 't' ? m : H - m - h;
+  const [bg, fg] = s.tagStyle === 'light' ? ['rgba(255,255,255,.88)', '#151515'] : ['rgba(20,20,20,.78)', '#fff'];
+  s.tags.forEach((t, i) => {
+    ctx.fillStyle = bg;
+    ctx.beginPath();
+    ctx.roundRect(x, y, widths[i], h, h * 0.3);
+    ctx.fill();
+    ctx.fillStyle = fg;
+    ctx.fillText(t, x + widths[i] / 2, y + h / 2 + h * 0.03);
+    x += widths[i] + gap;
+  });
+  ctx.restore();
+}
+
+const hasMarks = (s) => !!state.icon || s.tags.length > 0;
+
+function drawMarks(ctx, W, H, corner, s) {
+  if (state.icon) drawWatermark(ctx, W, H, corner, s);
+  drawTags(ctx, W, H, corner, s);
+}
+
 function renderPic(pic, s) {
   const { base, view } = pic;
   const ctx = view.getContext('2d');
   ctx.clearRect(0, 0, view.width, view.height);
   ctx.drawImage(base, 0, 0);
-  if (!state.icon) { pic.corner = null; pic.tag.hidden = true; return; }
-  pic.corner = pickCorner(pic, s);
-  drawWatermark(ctx, view.width, view.height, pic.corner, s);
+  pic.corner = state.icon ? pickCorner(pic, s) : null;
+  if (hasMarks(s)) drawMarks(ctx, view.width, view.height, pic.corner, s);
+  if (!pic.corner) { pic.tag.hidden = true; return; }
   pic.tag.hidden = false;
   pic.tag.textContent = pic.corner;
   pic.tag.title = s.position === 'auto' ? 'Auto-selected corner' : 'Corner';
@@ -141,12 +200,13 @@ function renderAll() {
 
 function updateControls() {
   const n = state.pics.length;
+  const ready = hasMarks(settings());
   ui.empty.hidden = n > 0;
   ui.picsCount.textContent = n ? `${n} loaded` : 'none loaded';
   ui.clearBtn.disabled = !n || state.busy;
-  ui.downloadBtn.disabled = !n || !state.icon || state.busy;
+  ui.downloadBtn.disabled = !n || !ready || state.busy;
   ui.downloadBtn.textContent = n === 1 ? 'Download image' : 'Download all (.zip)';
-  state.pics.forEach((p) => { p.dlBtn.disabled = !state.icon || state.busy; });
+  state.pics.forEach((p) => { p.dlBtn.disabled = !ready || state.busy; });
 }
 
 // ---------- loading ----------
@@ -243,7 +303,8 @@ async function renderFull(pic, s) {
   if (type === 'image/jpeg') { ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, canvas.width, canvas.height); }
   ctx.drawImage(bitmap, 0, 0);
   bitmap.close();
-  drawWatermark(ctx, canvas.width, canvas.height, pic.corner || pickCorner(pic, s), s);
+  const corner = state.icon ? pic.corner || pickCorner(pic, s) : null;
+  drawMarks(ctx, canvas.width, canvas.height, corner, s);
   const blob = await new Promise((res, rej) =>
     canvas.toBlob((b) => (b ? res(b) : rej(new Error('encode failed'))), type, s.quality));
   canvas.width = canvas.height = 0; // release memory early
@@ -262,14 +323,14 @@ function saveBlob(blob, name) {
 
 async function downloadOne(file) {
   const pic = state.pics.find((p) => p.file === file);
-  if (!pic || !state.icon) return;
   const s = settings();
+  if (!pic || !hasMarks(s)) return;
   const { blob, type } = await renderFull(pic, s);
   saveBlob(blob, outputName(file, type));
 }
 
 async function downloadAll() {
-  if (state.busy || !state.icon || !state.pics.length) return;
+  if (state.busy || !state.pics.length || !hasMarks(settings())) return;
   if (state.pics.length === 1) return downloadOne(state.pics[0].file);
   state.busy = true;
   updateControls();
@@ -337,9 +398,13 @@ ui.clearBtn.addEventListener('click', () => {
   updateControls();
 });
 
-for (const el of [ui.position, ui.size, ui.margin, ui.opacity, ...ui.autoCornersField.querySelectorAll('input')]) {
+for (const el of [ui.position, ui.size, ui.margin, ui.opacity, ...ui.autoCornersField.querySelectorAll('input'),
+  ui.priceOn, ui.price, ui.sizeTagOn, ui.sizeTag, ui.tagCorner, ui.tagStyle, ui.tagSize]) {
   el.addEventListener('input', () => { syncOutputs(); renderAll(); });
 }
+// Ticking a tag on jumps straight to its text box.
+ui.priceOn.addEventListener('change', () => ui.priceOn.checked && ui.price.focus());
+ui.sizeTagOn.addEventListener('change', () => ui.sizeTagOn.checked && ui.sizeTag.focus());
 for (const el of [ui.format, ui.quality]) el.addEventListener('input', syncOutputs);
 ui.downloadBtn.addEventListener('click', downloadAll);
 

@@ -79,7 +79,7 @@ h2 {
 .field small { color: #6f6f72; }
 output { color: var(--muted); font-variant-numeric: tabular-nums; }
 
-select, button {
+select, button, input[type=text] {
   width: 100%;
   font: inherit;
   color: var(--text);
@@ -88,9 +88,11 @@ select, button {
   border-radius: 6px;
   padding: 7px 10px;
 }
-select:focus, button:focus-visible, input:focus-visible { outline: 1px solid var(--accent); outline-offset: 1px; }
+select:focus, input[type=text]:focus, button:focus-visible, input:focus-visible { outline: 1px solid var(--accent); outline-offset: 1px; }
 input[type=range] { width: 100%; accent-color: var(--accent); }
 input[type=checkbox] { accent-color: var(--accent); }
+input[type=text]:disabled { opacity: .4; }
+.field > label.toggle { justify-content: flex-start; gap: 6px; align-items: center; }
 
 .corners { display: flex; justify-content: space-between; }
 .corners label { display: flex; gap: 4px; align-items: center; color: var(--muted); }
