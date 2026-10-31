@@ -52,8 +52,6 @@ function syncOutputs() {
   $('qualityOut').textContent = ui.quality.value + '%';
   $('tagSizeOut').textContent = ui.tagSize.value + '%';
   ui.autoCornersField.hidden = ui.position.value !== 'auto';
-  ui.price.disabled = !ui.priceOn.checked;
-  ui.sizeTag.disabled = !ui.sizeTagOn.checked;
   ui.tagOptions.hidden = !ui.priceOn.checked && !ui.sizeTagOn.checked;
   const lossless = ui.format.value === 'image/png';
   ui.quality.disabled = lossless;
@@ -400,12 +398,13 @@ ui.clearBtn.addEventListener('click', () => {
 
 for (const el of [ui.position, ui.size, ui.margin, ui.opacity, ...ui.autoCornersField.querySelectorAll('input'),
   ui.priceOn, ui.price, ui.sizeTagOn, ui.sizeTag, ui.tagCorner, ui.tagStyle, ui.tagSize]) {
-  el.addEventListener('input', () => { syncOutputs(); renderAll(); });
+  for (const type of ['input', 'change']) el.addEventListener(type, () => { syncOutputs(); renderAll(); });
 }
-// Ticking a tag on jumps straight to its text box.
-ui.priceOn.addEventListener('change', () => ui.priceOn.checked && ui.price.focus());
-ui.sizeTagOn.addEventListener('change', () => ui.sizeTagOn.checked && ui.sizeTag.focus());
-for (const el of [ui.format, ui.quality]) el.addEventListener('input', syncOutputs);
+// Typing into a tag turns it on; the checkbox alone toggles it off.
+for (const [box, text] of [[ui.priceOn, ui.price], [ui.sizeTagOn, ui.sizeTag]]) {
+  text.addEventListener('input', () => { if (text.value.trim()) { box.checked = true; syncOutputs(); } });
+}
+for (const el of [ui.format, ui.quality]) for (const type of ['input', 'change']) el.addEventListener(type, syncOutputs);
 ui.downloadBtn.addEventListener('click', downloadAll);
 
 syncOutputs();
