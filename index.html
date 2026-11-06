@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Iconizer</title>
   <meta name="description" content="Watermark a batch of pictures and videos with an icon, entirely in your browser.">
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css?v=3">
 </head>
 <body>
   <header>
@@ -145,6 +145,7 @@
   </main>
 
   <script src="vendor/jszip.min.js"></script>
-  <script src="app.js"></script>
+  <!-- Bump ?v= when app.js or style.css change, so cached copies are not mixed with a new page. -->
+  <script src="app.js?v=3"></script>
 </body>
 </html>
