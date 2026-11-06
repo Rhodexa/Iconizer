@@ -4,13 +4,13 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Iconizer</title>
-  <meta name="description" content="Watermark a batch of pictures with an icon, entirely in your browser.">
+  <meta name="description" content="Watermark a batch of pictures and videos with an icon, entirely in your browser.">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <header>
     <h1>Iconizer</h1>
-    <p class="sub">Watermark pictures with an icon. Everything runs in your browser — nothing is uploaded.</p>
+    <p class="sub">Watermark pictures and videos with an icon. Everything runs in your browser — nothing is uploaded.</p>
   </header>
 
   <main>
@@ -25,12 +25,12 @@
       </section>
 
       <section>
-        <h2>2 · Pictures</h2>
+        <h2>2 · Pictures &amp; videos</h2>
         <label class="drop" id="picsDrop">
-          <input type="file" id="picsInput" accept="image/*" multiple hidden>
-          <span>Drop or choose pictures<br><small id="picsCount">none loaded</small></span>
+          <input type="file" id="picsInput" accept="image/*,video/*" multiple hidden>
+          <span>Drop or choose pictures or videos<br><small id="picsCount">none loaded</small></span>
         </label>
-        <button type="button" class="ghost" id="clearBtn" disabled>Clear pictures</button>
+        <button type="button" class="ghost" id="clearBtn" disabled>Clear all</button>
       </section>
 
       <section>
@@ -73,27 +73,35 @@
         <h2>4 · Tags</h2>
         <div class="field">
           <label class="toggle"><input type="checkbox" id="priceOn"> Price</label>
-          <input type="text" id="price" placeholder="$25">
-        </div>
-        <div class="field">
-          <label class="toggle"><input type="checkbox" id="sizeTagOn"> Size</label>
-          <input type="text" id="sizeTag" placeholder="M" list="sizeList">
-          <datalist id="sizeList">
-            <option value="XS"><option value="S"><option value="M"><option value="L">
-            <option value="XL"><option value="XXL"><option value="One size">
-          </datalist>
-        </div>
-        <div id="tagOptions">
-          <div class="field">
-            <label for="tagCorner">Corner</label>
-            <select id="tagCorner">
-              <option value="opposite" selected>Opposite the icon</option>
+          <div class="tagrow">
+            <input type="text" id="price" placeholder="$25">
+            <select id="priceCorner" aria-label="Price corner">
+              <option value="opposite" selected>Opposite icon</option>
               <option value="br">Bottom right</option>
               <option value="bl">Bottom left</option>
               <option value="tr">Top right</option>
               <option value="tl">Top left</option>
             </select>
           </div>
+        </div>
+        <div class="field">
+          <label class="toggle"><input type="checkbox" id="sizeTagOn"> Size</label>
+          <div class="tagrow">
+            <input type="text" id="sizeTag" placeholder="M" list="sizeList">
+            <select id="sizeTagCorner" aria-label="Size corner">
+              <option value="opposite" selected>Opposite icon</option>
+              <option value="br">Bottom right</option>
+              <option value="bl">Bottom left</option>
+              <option value="tr">Top right</option>
+              <option value="tl">Top left</option>
+            </select>
+          </div>
+          <datalist id="sizeList">
+            <option value="XS"><option value="S"><option value="M"><option value="L">
+            <option value="XL"><option value="XXL"><option value="One size">
+          </datalist>
+        </div>
+        <div id="tagOptions">
           <div class="field">
             <label for="tagStyle">Style</label>
             <select id="tagStyle">
@@ -124,6 +132,7 @@
           <label for="quality">Quality <output id="qualityOut"></output></label>
           <input type="range" id="quality" min="50" max="100" value="92">
         </div>
+        <small>Format and quality apply to pictures. Videos are re-recorded in real time as MP4 or WebM, whichever your browser supports, so keep this tab open while they render.</small>
         <button type="button" class="primary" id="downloadBtn" disabled>Download all (.zip)</button>
         <div class="progress" id="progress" hidden><div></div></div>
         <small id="status"></small>
@@ -131,7 +140,7 @@
     </aside>
 
     <section class="gallery" id="gallery">
-      <p class="empty" id="empty">Load an icon and some pictures to see previews here.</p>
+      <p class="empty" id="empty">Load an icon and some pictures or videos to see previews here.</p>
     </section>
   </main>
 

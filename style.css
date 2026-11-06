@@ -91,6 +91,8 @@ select, button, input[type=text] {
 select:focus, input[type=text]:focus, button:focus-visible, input:focus-visible { outline: 1px solid var(--accent); outline-offset: 1px; }
 input[type=range] { width: 100%; accent-color: var(--accent); }
 input[type=checkbox] { accent-color: var(--accent); }
+.tagrow { display: grid; grid-template-columns: 1fr auto; gap: 6px; }
+.tagrow select { width: auto; }
 .field > label.toggle { justify-content: flex-start; gap: 6px; align-items: center; }
 
 .corners { display: flex; justify-content: space-between; }
@@ -140,6 +142,7 @@ button.ghost:not(:disabled):hover { border-color: var(--accent); }
   color: var(--muted);
 }
 .card .name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.card .kind { color: var(--text); }
 .card .tag { padding: 1px 6px; border-radius: 4px; background: var(--raised); text-transform: uppercase; }
 .card button { width: auto; margin: 0; padding: 2px 8px; font-size: 12px; }
 
